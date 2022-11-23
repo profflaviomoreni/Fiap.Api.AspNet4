@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fiap.Api.AspNet4.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]")] // teste
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
