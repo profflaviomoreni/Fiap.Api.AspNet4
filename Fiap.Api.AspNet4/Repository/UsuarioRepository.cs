@@ -30,6 +30,11 @@ namespace Fiap.Api.AspNet4.Repository
             return _context.Usuarios.FirstOrDefault(x => x.NomeUsuario == name);
         }
 
+        public UsuarioModel FindByNameAndSenha(string name, string senha)
+        {
+            return _context.Usuarios.FirstOrDefault(x => x.NomeUsuario == name && x.Senha == senha);
+        }
+
 
         public int Insert(UsuarioModel usuarioModel)
         {
