@@ -1,8 +1,12 @@
+using Fiap.Api.AspNet4;
 using Fiap.Api.AspNet4.Data;
 using Fiap.Api.AspNet4.Repository;
 using Fiap.Api.AspNet4.Repository.Interface;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +16,35 @@ builder.Services.AddDbContext<DataContext>(
     opt => opt.UseSqlServer(connectionString).EnableSensitiveDataLogging(true)
 );
 
+builder.Services.AddScoped<IMarcaRepository, MarcaRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+
+#region autenticacao
+var key = Encoding.ASCII.GetBytes(Settings.Secret);
+
+builder.Services.AddAuthentication( x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer( j =>
+{
+    j.RequireHttpsMetadata = false;
+    j.SaveToken = true;
+    j.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+#endregion
+
+
+
 
 builder.Services.AddControllers();
 
@@ -34,6 +66,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

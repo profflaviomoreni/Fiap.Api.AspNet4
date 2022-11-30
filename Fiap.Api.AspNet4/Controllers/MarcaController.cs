@@ -1,5 +1,6 @@
 ﻿using Fiap.Api.AspNet4.Data;
 using Fiap.Api.AspNet4.Models;
+using Fiap.Api.AspNet4.Repository.Interface;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +12,15 @@ namespace Fiap.Api.AspNet4.Controllers
     public class MarcaController : ControllerBase
     {
 
-        private readonly DataContext dataContext;
+        private readonly IMarcaRepository marcaRepository;
 
-        public MarcaController(DataContext ctx)
+        public MarcaController(IMarcaRepository _marcaRepository)
         {
-            dataContext = ctx;
+            marcaRepository = _marcaRepository;
         }
 
 
+        /*
         [HttpGet]
         public ActionResult<IList<MarcaModel>> Get()
         {
@@ -33,13 +35,48 @@ namespace Fiap.Api.AspNet4.Controllers
             }
             
         }
+        */
+
+
+        [HttpGet]
+        public async Task<ActionResult<IList<dynamic>>> Get(
+                [FromQuery] int pagina = 0,
+                [FromQuery] int tamanho = 3
+            )
+        {
+            var totalGeral = marcaRepository.Count();
+            var totalPagina = Convert.ToInt16( Math.Ceiling((double) totalGeral/tamanho ) );
+            var anterior = pagina > 0 ? $"marca?pagina={pagina - 1}&tamanho={tamanho}" : "";
+            var proxima = pagina < totalPagina -1 ? $"marca?pagina={pagina + 1}&tamanho={tamanho}" : "";
+
+            if ( pagina > totalPagina )
+            {
+                return NotFound();
+            }
+
+            var marcas = marcaRepository.FindAll(pagina, tamanho);
+
+            var retorno = new
+            {
+                total = totalGeral,
+                totalPaginas = totalPagina,
+                anterior = anterior,
+                proxima = proxima,
+                marcas = marcas
+            };
+
+            return Ok(retorno);
+
+        }
+
+
 
 
         [HttpGet]
         [Route("{id:int}")]
         public ActionResult<MarcaModel> GetById([FromRoute] int id)
         {
-            var marca = dataContext.Marcas.AsNoTracking().FirstOrDefault( m => m.MarcaId == id );
+            var marca = marcaRepository.FindById(id);
 
             if ( marca == null ) {
                 return NotFound();
@@ -59,8 +96,7 @@ namespace Fiap.Api.AspNet4.Controllers
                     return BadRequest(ModelState);
                 }
 
-                dataContext.Marcas.Add(marcaModel);
-                dataContext.SaveChanges();
+                marcaModel.MarcaId = marcaRepository.Insert(marcaModel);
 
                 var location = new Uri(Request.GetEncodedUrl() + marcaModel.MarcaId);
 
@@ -90,8 +126,7 @@ namespace Fiap.Api.AspNet4.Controllers
                 }
 
 
-                dataContext.Marcas.Update(marcaModel);
-                dataContext.SaveChanges();
+                marcaRepository.Update(marcaModel);
                 return NoContent();
 
             }
@@ -109,7 +144,7 @@ namespace Fiap.Api.AspNet4.Controllers
         public ActionResult<MarcaModel> Delete([FromRoute] int id)
         {
 
-            var marcaModel = dataContext.Marcas.AsNoTracking().FirstOrDefault( m => m.MarcaId == id );
+            var marcaModel = marcaRepository.FindById(id);
             
             if ( marcaModel == null )
             {
@@ -117,8 +152,7 @@ namespace Fiap.Api.AspNet4.Controllers
             }
 
 
-            dataContext.Marcas.Remove(marcaModel);
-            dataContext.SaveChanges();
+            marcaRepository.Delete(id);
             return NoContent();
         }
 

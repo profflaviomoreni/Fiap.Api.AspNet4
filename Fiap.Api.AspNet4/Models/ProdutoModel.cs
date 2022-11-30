@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Fiap.Api.AspNet4.Models
 {
@@ -36,11 +37,15 @@ namespace Fiap.Api.AspNet4.Models
 
         public int CategoriaId { get; set; }
         [ForeignKey("CategoriaId")]
+
+        [AllowNull]
         public CategoriaModel Categoria { get; set; }
 
 
         public int MarcaId { get; set; }
         [ForeignKey("MarcaId")]
+
+        [AllowNull]
         public MarcaModel Marca { get; set; }
 
 

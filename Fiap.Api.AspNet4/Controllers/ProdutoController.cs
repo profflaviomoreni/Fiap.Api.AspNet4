@@ -44,10 +44,7 @@ namespace Fiap.Api.AspNet4.Controllers
             [FromServices] IProdutoRepository produtoRepository,
             [FromBody] ProdutoModel produtoModel)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            
 
             try
             {
@@ -70,10 +67,7 @@ namespace Fiap.Api.AspNet4.Controllers
             [FromServices] IProdutoRepository produtoRepository,
             [FromBody] ProdutoModel produtoModel)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+
 
             if (produtoModel.ProdutoId != id)
             {

@@ -22,9 +22,20 @@ namespace Fiap.Api.AspNet4.Repository
 
 
 
+        public int Count()
+        {
+            return _context.Marcas.Count();
+        }
 
+        public IList<MarcaModel> FindAll(int pagina, int tamanho)
+        {
+            IList<MarcaModel> lista = _context.Marcas
+                    .Skip(tamanho * pagina)
+                    .Take(tamanho)
+                    .ToList();
 
-
+            return lista;
+        }
 
 
         public MarcaModel FindById(int id)
@@ -55,7 +66,7 @@ namespace Fiap.Api.AspNet4.Repository
             _context.SaveChanges();
         }
 
-
+        
     }
 
 }
