@@ -8,7 +8,7 @@ namespace Fiap.Api.AspNet4.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AcessoTestController : ControllerBase
+    public class TestAcessoController : ControllerBase
     {
 
         [HttpGet]

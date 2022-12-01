@@ -7,7 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fiap.Api.AspNet4.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
+    [ApiVersion("3.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class MarcaController : ControllerBase
     {
@@ -20,11 +23,12 @@ namespace Fiap.Api.AspNet4.Controllers
         }
 
 
-        /*
+        
         [HttpGet]
+        [ApiVersion("1.0", Deprecated = true)]
         public ActionResult<IList<MarcaModel>> Get()
         {
-            var listaMarcas = dataContext.Marcas.AsNoTracking().ToList<MarcaModel>();
+            var listaMarcas = marcaRepository.FindAll();
 
             if ( listaMarcas == null || listaMarcas.Count == 0  )
             {
@@ -35,15 +39,26 @@ namespace Fiap.Api.AspNet4.Controllers
             }
             
         }
-        */
+        
 
+
+        
+        /// <summary>
+        ///     Resumo do método GET da API de Marcas
+        /// </summary>
+        /// <param name="pagina">Recebe qual a página que eu quero consulta das marcas</param>
+        /// <param name="tamanho">Quantidade de itens exibindo na consulta</param>
+        /// <returns>200 Sucesso, 404 Nada encontrado</returns>
 
         [HttpGet]
+        [ApiVersion("2.0")]
+        [ApiVersion("3.0")]
         public async Task<ActionResult<IList<dynamic>>> Get(
                 [FromQuery] int pagina = 0,
                 [FromQuery] int tamanho = 3
             )
         {
+
             var totalGeral = marcaRepository.Count();
             var totalPagina = Convert.ToInt16( Math.Ceiling((double) totalGeral/tamanho ) );
             var anterior = pagina > 0 ? $"marca?pagina={pagina - 1}&tamanho={tamanho}" : "";
@@ -68,7 +83,7 @@ namespace Fiap.Api.AspNet4.Controllers
             return Ok(retorno);
 
         }
-
+        
 
 
 

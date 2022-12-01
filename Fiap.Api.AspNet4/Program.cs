@@ -4,8 +4,14 @@ using Fiap.Api.AspNet4.Repository;
 using Fiap.Api.AspNet4.Repository.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerUI;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +54,36 @@ builder.Services.AddAuthentication( x =>
 
 builder.Services.AddControllers();
 
+#region Swagger and Versioning
+builder.Services.AddApiVersioning( options =>
+{
+    options.UseApiBehavior = false; // revisao
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(3, 0);
+    options.ApiVersionReader =
+        ApiVersionReader.Combine(
+            new HeaderApiVersionReader("x-api-version"),
+            new QueryStringApiVersionReader(),
+            new UrlSegmentApiVersionReader());
+});
+
+builder.Services.AddVersionedApiExplorer(setup => {
+    setup.GroupNameFormat = "'v'VVV";
+    setup.SubstituteApiVersionInUrl = true;
+});
+
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
+
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+#endregion
+
 builder.Services.Configure<ApiBehaviorOptions>(options => {
     options.SuppressModelStateInvalidFilter = true;
 });
@@ -68,14 +104,30 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+app.UseApiVersioning();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        foreach (var description in provider.ApiVersionDescriptions)
+        {
+            c.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant()
+            );
+        }
+        c.DocExpansion(DocExpansion.List);
+    });
 }
 
 app.UseHttpsRedirection();
+
+
 
 app.UseAuthentication();
 
